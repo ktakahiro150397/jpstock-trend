@@ -3,7 +3,9 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 
+from app.config import get_settings
 from app.db import Base, SessionLocal, engine
+from app.services.edinet_service import collect_financial_documents
 from app.services.ingest_service import ingest_market_data
 from app.services.signal_service import run_analysis
 from app.services.test_data_service import delete_test_ticker_data, generate_test_price_bars
@@ -39,6 +41,9 @@ def main() -> None:
     test_delete = sub.add_parser("test-delete", help="Delete synthetic test ticker data")
     test_delete.add_argument("--ticker", required=True)
 
+    edinet_scan = sub.add_parser("edinet-scan", help="Scan EDINET financial filing candidates by date")
+    edinet_scan.add_argument("--date", dest="target_date", required=True, help="YYYY-MM-DD")
+
     args = parser.parse_args()
 
     with SessionLocal() as db:
@@ -69,6 +74,15 @@ def main() -> None:
         if args.command == "test-delete":
             result = delete_test_ticker_data(db, ticker=args.ticker.strip().upper())
             print(result)
+            return
+
+        if args.command == "edinet-scan":
+            settings = get_settings()
+            docs = collect_financial_documents(
+                api_key=settings.edinet_api_key,
+                target_date=_parse_date(args.target_date),
+            )
+            print({"date": args.target_date, "count": len(docs), "sample": [d.sec_code for d in docs[:10]]})
             return
 
 
