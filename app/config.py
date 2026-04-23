@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     yahoo_max_retries: int = 3
     yahoo_rate_limit_cooldown_seconds: int = 60
 
+    edinet_api_key: str = ""
+
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     @property
