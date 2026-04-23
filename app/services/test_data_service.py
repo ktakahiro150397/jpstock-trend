@@ -22,10 +22,10 @@ def _business_days(start_date: date, end_date: date) -> list[date]:
 def _ensure_symbol(db: Session, ticker: str) -> bool:
     existing = db.scalar(select(Symbol).where(Symbol.ticker == ticker))
     if existing:
+        if existing.market != "TEST":
+            raise ValueError(f"ticker {ticker} already exists as non-TEST symbol")
         if existing.is_active == 0:
             existing.is_active = 1
-        if existing.market != "TEST":
-            existing.market = "TEST"
         return False
     db.add(Symbol(ticker=ticker, market="TEST", is_active=1))
     return True
@@ -116,11 +116,18 @@ def delete_test_ticker_data(db: Session, ticker: str) -> dict[str, int | str]:
     bars_deleted = db.execute(
         delete(PriceBar).where(PriceBar.ticker == ticker, PriceBar.source == "synthetic")
     ).rowcount or 0
-    analysis_deleted = db.execute(delete(AnalysisResult).where(AnalysisResult.ticker == ticker)).rowcount or 0
-    notifications_deleted = (
-        db.execute(delete(NotificationLog).where(NotificationLog.ticker == ticker)).rowcount or 0
-    )
-    symbols_deleted = db.execute(delete(Symbol).where(Symbol.ticker == ticker, Symbol.market == "TEST")).rowcount or 0
+    symbol = db.scalar(select(Symbol).where(Symbol.ticker == ticker))
+    is_test_symbol = bool(symbol and symbol.market == "TEST")
+
+    analysis_deleted = 0
+    notifications_deleted = 0
+    symbols_deleted = 0
+    if is_test_symbol:
+        analysis_deleted = db.execute(delete(AnalysisResult).where(AnalysisResult.ticker == ticker)).rowcount or 0
+        notifications_deleted = (
+            db.execute(delete(NotificationLog).where(NotificationLog.ticker == ticker)).rowcount or 0
+        )
+        symbols_deleted = db.execute(delete(Symbol).where(Symbol.ticker == ticker, Symbol.market == "TEST")).rowcount or 0
     db.commit()
 
     return {
