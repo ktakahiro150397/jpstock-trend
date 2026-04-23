@@ -90,8 +90,9 @@ def run_analysis(db: Session, run_type: str = "weekly", as_of_date: date | None 
 
     db.commit()
 
+    should_send_notifications = run_type == "weekly" and as_of_date is None
     candidates = [r for r in results if r.status == "entry_candidate" and _should_notify(db, r.ticker, "weekly", now)]
-    if candidates and as_of_date is None:
+    if candidates and should_send_notifications:
         message = build_discord_message(candidates)
         send_discord(settings.discord_webhook_url, message)
         key = timeframe_period_key(now, "weekly")

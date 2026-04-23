@@ -31,7 +31,7 @@ def _resample(df: pd.DataFrame, timeframe: str) -> pd.DataFrame:
 def _calc_trend_score(df_weekly: pd.DataFrame, df_monthly: pd.DataFrame, reasons: list[str]) -> int:
     score = 0
     for name, frame in (("週足", df_weekly), ("月足", df_monthly)):
-        if len(frame) < 60:
+        if len(frame) < 200:
             continue
         ma50 = frame["Close"].rolling(50).mean()
         ma200 = frame["Close"].rolling(200).mean()
