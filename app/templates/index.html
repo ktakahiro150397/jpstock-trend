@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>jpstock-trend dashboard</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; }
+    .candidate { color: #0a7; font-weight: bold; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+  </style>
+</head>
+<body>
+  <h1>エントリー候補ダッシュボード</h1>
+  <p>ログイン: {{ user.email }} | <a href="/logout">ログアウト</a></p>
+  {% if auth_skip_enabled %}
+  <p style="color: #b36b00;">※ テストモード(認証スキップ)でログイン中</p>
+  {% endif %}
+
+  <form action="/jobs/analyze" method="post">
+    <label>as_of_date（任意）:
+      <input type="date" name="as_of_date" value="{{ selected_date if selected_date else '' }}">
+    </label>
+    <button type="submit">今すぐ分析を実行</button>
+  </form>
+  <form action="/jobs/ingest" method="post" style="margin-top: 8px;">
+    <label>as_of_date（任意）:
+      <input type="date" name="as_of_date" value="{{ selected_date if selected_date else '' }}">
+    </label>
+    <button type="submit">Yahooデータを取込</button>
+  </form>
+  <hr style="margin: 16px 0;">
+  <h3>テスト用データ（ランダムウォーク）</h3>
+  <form action="/jobs/test-data/generate" method="post">
+    <label>Ticker:
+      <input type="text" name="ticker" placeholder="TEST001" required>
+    </label>
+    <label>開始日:
+      <input type="date" name="start_date" required>
+    </label>
+    <label>終了日:
+      <input type="date" name="end_date" required>
+    </label>
+    <label>初期価格:
+      <input type="number" name="start_price" step="0.01" value="1000">
+    </label>
+    <label>ドリフト:
+      <input type="number" name="drift" step="0.0001" value="0.0002">
+    </label>
+    <label>ボラティリティ:
+      <input type="number" name="volatility" step="0.0001" value="0.02">
+    </label>
+    <label>乱数seed(任意):
+      <input type="number" name="seed">
+    </label>
+    <button type="submit">テストデータ生成</button>
+  </form>
+  <form action="/jobs/test-data/delete" method="post" style="margin-top: 8px;">
+    <label>Ticker:
+      <input type="text" name="ticker" placeholder="TEST001" required>
+    </label>
+    <button type="submit">テストデータ削除</button>
+  </form>
+
+  <form action="/" method="get" style="margin-top: 10px;">
+    <label>表示日付:
+      <input type="date" name="as_of_date" value="{{ selected_date if selected_date else '' }}">
+    </label>
+    <button type="submit">日付で表示</button>
+    <a href="/">リセット</a>
+  </form>
+
+  <h2>最新判定</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Ticker</th><th>Status</th><th>Total</th><th>Trend</th><th>Dip</th><th>Breakout</th><th>As Of</th><th>Analyzed</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in results %}
+      <tr>
+        <td><a href="/symbols/{{ r.ticker }}">{{ r.ticker }}</a></td>
+        <td class="{{ 'candidate' if r.status == 'entry_candidate' else '' }}">{{ r.status }}</td>
+        <td>{{ r.total_score }}</td>
+        <td>{{ r.trend_score }}</td>
+        <td>{{ r.dip_score }}</td>
+        <td>{{ r.breakout_score }}</td>
+        <td>{{ r.as_of_date }}</td>
+        <td>{{ r.analyzed_at }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>
