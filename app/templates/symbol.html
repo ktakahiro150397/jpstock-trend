@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ ticker }} details</title>
+  <style>
+    body { font-family: sans-serif; margin: 24px; }
+    pre { background: #f7f7f7; padding: 8px; }
+    .candidate { color: #0a7; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>{{ ticker }} 判定履歴</h1>
+  <p><a href="/">← ダッシュボード</a></p>
+
+  {% for r in rows %}
+    <h3>{{ r.as_of_date }} 時点 / {{ r.analyzed_at }} 実行 - <span class="{{ 'candidate' if r.status == 'entry_candidate' else '' }}">{{ r.status }}</span> ({{ r.total_score }})</h3>
+    <p>trend={{ r.trend_score }} / dip={{ r.dip_score }} / breakout={{ r.breakout_score }}</p>
+    <pre>{{ r.reasons }}</pre>
+  {% endfor %}
+</body>
+</html>
