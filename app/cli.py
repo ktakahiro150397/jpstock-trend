@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 from datetime import datetime
 
-from app.db import SessionLocal
+from app.db import Base, SessionLocal, engine
 from app.services.ingest_service import ingest_market_data
 from app.services.signal_service import run_analysis
 from app.services.test_data_service import delete_test_ticker_data, generate_test_price_bars
@@ -16,6 +16,8 @@ def _parse_date(value: str | None):
 
 
 def main() -> None:
+    Base.metadata.create_all(bind=engine)
+
     parser = argparse.ArgumentParser(description="jpstock-trend command interface")
     sub = parser.add_subparsers(dest="command", required=True)
 

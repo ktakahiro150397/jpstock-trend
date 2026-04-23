@@ -4,7 +4,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.config import get_settings
-from app.db import SessionLocal
+from app.db import Base, SessionLocal, engine
 from app.services.ingest_service import ingest_market_data
 from app.services.signal_service import run_analysis
 
@@ -20,6 +20,8 @@ def scheduled_analysis() -> None:
 
 
 def main() -> None:
+    Base.metadata.create_all(bind=engine)
+
     settings = get_settings()
     scheduler = BlockingScheduler(timezone=settings.timezone)
     trigger = CronTrigger(
