@@ -101,9 +101,10 @@ Yahooレート制限対策（デフォルト値は `.env.example`）:
 - `YAHOO_MAX_RETRIES` : レート制限時の再試行回数
 - `YAHOO_RATE_LIMIT_COOLDOWN_SECONDS` : レート制限時の待機秒数（再試行ごとに増加）
 
-EDINET連携PoC:
-- `EDINET_API_KEY` : 金融庁EDINET APIキー
-- 書類候補スキャン: `python -m app.cli edinet-scan --date 2026-04-01`
+EDINET連携PoC（[EDINET DB](https://edinetdb.jp/) 使用）:
+- `EDINET_API_KEY` : EDINET DB のAPIキー（`https://edinetdb.jp/developers/dashboard` で取得）
+- 決算発表企業スキャン: `python -m app.cli edinet-scan --date YYYY-MM-DD`
+  - 指定日に決算発表した上場企業の証券コード一覧と件数を出力
 
 ## API（主要）
 

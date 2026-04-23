@@ -82,7 +82,7 @@ def main() -> None:
                 api_key=settings.edinet_api_key,
                 target_date=_parse_date(args.target_date),
             )
-            print({"date": args.target_date, "count": len(docs), "sample": [d.doc_id for d in docs[:10]]})
+            print({"date": args.target_date, "count": len(docs), "sample": [d.sec_code for d in docs[:10]]})
             return
 
 

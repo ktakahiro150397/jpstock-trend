@@ -3,69 +3,58 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
-from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 
 @dataclass
-class EdinetDocument:
-    doc_id: str
-    edinet_code: str
-    sec_code: str | None
-    filer_name: str
-    doc_type_code: str
-    form_code: str
-    submit_date_time: str
-    csv_flag: str | None
-    xbrl_flag: str | None
+class EdinetDbCalendarEntry:
+    sec_code: str
+    company_name: str
+    announcement_date: str
+    period_type: str
+    fiscal_year_end: str
+    industry: str
+    market_segment: str
 
 
 class EdinetDataSource:
-    """Lightweight wrapper around EDINET API v2.
+    """Lightweight wrapper around EDINET DB API v1 (edinetdb.jp)."""
 
-    API docs (FSA): https://disclosure2dl.edinet-fsa.go.jp/guide/static/disclosure/download/ESE140206.pdf
-    """
-
-    def __init__(self, api_key: str, base_url: str = "https://api.edinet-fsa.go.jp/api/v2") -> None:
+    def __init__(self, api_key: str, base_url: str = "https://edinetdb.jp/v1") -> None:
         self.api_key = api_key
         self.base_url = base_url.rstrip("/")
 
-    def get_documents(self, target_date: date, include_list: bool = True) -> list[EdinetDocument]:
-        params = {
-            "date": target_date.isoformat(),
-            "Subscription-Key": self.api_key,
-        }
-        if include_list:
-            params["type"] = "2"
-
-        url = f"{self.base_url}/documents.json?{urlencode(params)}"
-        req = Request(url, headers={"User-Agent": "jpstock-trend/0.1"})
-
-        with urlopen(req, timeout=30) as response:  # noqa: S310 (EDINET official endpoint)
+    def get_calendar(self) -> list[EdinetDbCalendarEntry]:
+        url = f"{self.base_url}/calendar"
+        req = Request(url, headers={
+            "User-Agent": "jpstock-trend/0.1",
+            "X-API-Key": self.api_key,
+        })
+        with urlopen(req, timeout=30) as response:  # noqa: S310 (edinetdb.jp official endpoint)
             payload = json.loads(response.read().decode("utf-8"))
+        return _parse_calendar_response(payload)
 
-        return parse_documents_response(payload)
+    def get_documents(self, target_date: date, include_list: bool = True) -> list[EdinetDbCalendarEntry]:
+        """Compat shim: returns calendar entries filtered to target_date."""
+        all_entries = self.get_calendar()
+        target = target_date.isoformat()
+        return [e for e in all_entries if e.announcement_date == target]
 
 
-def parse_documents_response(payload: dict[str, Any]) -> list[EdinetDocument]:
-    results = payload.get("results") or []
-    documents: list[EdinetDocument] = []
-    for item in results:
-        doc_id = str(item.get("docID") or "").strip()
-        if not doc_id:
+def _parse_calendar_response(payload: dict) -> list[EdinetDbCalendarEntry]:
+    entries = (payload.get("data") or {}).get("calendar") or []
+    result: list[EdinetDbCalendarEntry] = []
+    for item in entries:
+        sec_code = str(item.get("secCode") or "").strip()
+        if not sec_code:
             continue
-        documents.append(
-            EdinetDocument(
-                doc_id=doc_id,
-                edinet_code=str(item.get("edinetCode") or "").strip(),
-                sec_code=(str(item.get("secCode")).strip() if item.get("secCode") else None),
-                filer_name=str(item.get("filerName") or "").strip(),
-                doc_type_code=str(item.get("docTypeCode") or "").strip(),
-                form_code=str(item.get("formCode") or "").strip(),
-                submit_date_time=str(item.get("submitDateTime") or "").strip(),
-                csv_flag=(str(item.get("csvFlag")).strip() if item.get("csvFlag") is not None else None),
-                xbrl_flag=(str(item.get("xbrlFlag")).strip() if item.get("xbrlFlag") is not None else None),
-            )
-        )
-    return documents
+        result.append(EdinetDbCalendarEntry(
+            sec_code=sec_code,
+            company_name=str(item.get("companyName") or "").strip(),
+            announcement_date=str(item.get("announcementDate") or "").strip(),
+            period_type=str(item.get("periodType") or "").strip(),
+            fiscal_year_end=str(item.get("fiscalYearEnd") or "").strip(),
+            industry=str(item.get("industry") or "").strip(),
+            market_segment=str(item.get("marketSegment") or "").strip(),
+        ))
+    return result
