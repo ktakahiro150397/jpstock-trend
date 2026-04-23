@@ -82,7 +82,19 @@ python -m app.scheduler
 ```bash
 python -m app.cli ingest --as-of-date 2025-12-01
 python -m app.cli analyze --as-of-date 2025-12-01
+python -m app.cli test-generate --ticker TEST001 --start-date 2025-01-01 --end-date 2025-03-31 --seed 42
+python -m app.cli test-delete --ticker TEST001
 ```
+
+自動テスト:
+
+```bash
+pip install pytest
+pytest
+```
+
+- `tests/test_test_data_service.py` で、synthetic生成/削除の安全性（非TEST保護、TEST限定削除）を検証します。
+- GitHub Actions では push / pull_request 時に `pytest` を実行します（`.github/workflows/tests.yml`）。
 
 Yahooレート制限対策（デフォルト値は `.env.example`）:
 - `YAHOO_REQUEST_INTERVAL_SECONDS` : ティッカー間の待機秒数
@@ -98,6 +110,11 @@ Yahooレート制限対策（デフォルト値は `.env.example`）:
   - `as_of_date=YYYY-MM-DD` を渡すと指定日時点で再計算（バックテスト用途）
 - `POST /jobs/ingest` : YahooデータをDBへ手動取込（ログイン必須）
   - `as_of_date=YYYY-MM-DD` を指定可能
+- `POST /jobs/test-data/generate` : テスト用ランダムウォークデータを一括生成（ログイン必須）
+  - `ticker`, `start_date`, `end_date` は必須
+  - `start_price`, `drift`, `volatility`, `seed` は任意
+- `POST /jobs/test-data/delete` : テスト用ティッカーの合成データを削除（ログイン必須）
+  - `ticker` 必須
 
 ## 監視の最小構成（自宅サーバ向け）
 

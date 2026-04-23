@@ -16,6 +16,7 @@ from app.db import Base, engine, get_db
 from app.models import AnalysisResult
 from app.services.ingest_service import ingest_market_data
 from app.services.signal_service import run_analysis
+from app.services.test_data_service import delete_test_ticker_data, generate_test_price_bars
 
 settings = get_settings()
 app = FastAPI(title=settings.app_name)
@@ -117,6 +118,47 @@ def trigger_ingest(
     parsed_date = parse_iso_date(as_of_date) if as_of_date else None
     result = ingest_market_data(db, as_of_date=parsed_date)
     return result
+
+
+@app.post("/jobs/test-data/generate")
+def generate_test_data(
+    _: Request,
+    ticker: str = Form(...),
+    start_date: str = Form(...),
+    end_date: str = Form(...),
+    start_price: float = Form(default=1000.0),
+    drift: float = Form(default=0.0002),
+    volatility: float = Form(default=0.02),
+    seed: int | None = Form(default=None),
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_login),
+):
+    del user
+    try:
+        result = generate_test_price_bars(
+            db,
+            ticker=ticker.strip().upper(),
+            start_date=parse_iso_date(start_date),
+            end_date=parse_iso_date(end_date),
+            start_price=start_price,
+            drift=drift,
+            volatility=volatility,
+            seed=seed,
+        )
+        return result
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/jobs/test-data/delete")
+def delete_test_data(
+    _: Request,
+    ticker: str = Form(...),
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_login),
+):
+    del user
+    return delete_test_ticker_data(db, ticker=ticker.strip().upper())
 
 
 @app.get("/healthz")
