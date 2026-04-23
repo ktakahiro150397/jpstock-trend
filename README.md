@@ -84,6 +84,11 @@ python -m app.cli ingest --as-of-date 2025-12-01
 python -m app.cli analyze --as-of-date 2025-12-01
 ```
 
+Yahooレート制限対策（デフォルト値は `.env.example`）:
+- `YAHOO_REQUEST_INTERVAL_SECONDS` : ティッカー間の待機秒数
+- `YAHOO_MAX_RETRIES` : レート制限時の再試行回数
+- `YAHOO_RATE_LIMIT_COOLDOWN_SECONDS` : レート制限時の待機秒数（再試行ごとに増加）
+
 ## API（主要）
 
 - `GET /healthz` : ヘルスチェック

@@ -29,6 +29,9 @@ class Settings(BaseSettings):
     weekly_cron_minute: int = 0
     ingest_cron_hour: int = 6
     ingest_cron_minute: int = 30
+    yahoo_request_interval_seconds: float = 2.0
+    yahoo_max_retries: int = 3
+    yahoo_rate_limit_cooldown_seconds: int = 60
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

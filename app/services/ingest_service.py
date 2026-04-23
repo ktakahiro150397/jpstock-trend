@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
+import time
 
 import pandas as pd
 from sqlalchemy import select
 from sqlalchemy.orm import Session
+from yfinance.exceptions import YFRateLimitError
 
 from app.config import get_settings
 from app.data_sources.yahoo import YahooFinanceDataSource
@@ -87,11 +89,23 @@ def ingest_market_data(db: Session, as_of_date: date | None = None) -> dict[str,
     total = 0
 
     for symbol in symbols:
-        raw = datasource.fetch_ohlcv(symbol.ticker, lookback_days=lookback_days, as_of_date=target)
+        try:
+            raw = datasource.fetch_ohlcv(
+                symbol.ticker,
+                lookback_days=lookback_days,
+                as_of_date=target,
+                max_retries=settings.yahoo_max_retries,
+                rate_limit_cooldown_seconds=settings.yahoo_rate_limit_cooldown_seconds,
+            )
+        except YFRateLimitError:
+            # Stop burst requests when rate limited and keep already persisted rows.
+            break
         if raw.empty:
+            time.sleep(settings.yahoo_request_interval_seconds)
             continue
         normalized = _normalize_columns(raw)
         total += _upsert_price_bars(db, ticker=symbol.ticker, interval="1d", source="yahoo", frame=normalized)
+        time.sleep(settings.yahoo_request_interval_seconds)
 
     db.commit()
     return {"symbols": len(symbols), "bars_upserted": total}
