@@ -29,6 +29,38 @@
     </label>
     <button type="submit">Yahooデータを取込</button>
   </form>
+  <hr style="margin: 16px 0;">
+  <h3>テスト用データ（ランダムウォーク）</h3>
+  <form action="/jobs/test-data/generate" method="post">
+    <label>Ticker:
+      <input type="text" name="ticker" placeholder="TEST001" required>
+    </label>
+    <label>開始日:
+      <input type="date" name="start_date" required>
+    </label>
+    <label>終了日:
+      <input type="date" name="end_date" required>
+    </label>
+    <label>初期価格:
+      <input type="number" name="start_price" step="0.01" value="1000">
+    </label>
+    <label>ドリフト:
+      <input type="number" name="drift" step="0.0001" value="0.0002">
+    </label>
+    <label>ボラティリティ:
+      <input type="number" name="volatility" step="0.0001" value="0.02">
+    </label>
+    <label>乱数seed(任意):
+      <input type="number" name="seed">
+    </label>
+    <button type="submit">テストデータ生成</button>
+  </form>
+  <form action="/jobs/test-data/delete" method="post" style="margin-top: 8px;">
+    <label>Ticker:
+      <input type="text" name="ticker" placeholder="TEST001" required>
+    </label>
+    <button type="submit">テストデータ削除</button>
+  </form>
 
   <form action="/" method="get" style="margin-top: 10px;">
     <label>表示日付:
