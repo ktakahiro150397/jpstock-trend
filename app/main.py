@@ -39,6 +39,8 @@ def on_startup() -> None:
 
 
 def require_login(request: Request) -> dict:
+    if settings.auth_skip_enabled:
+        return {"email": settings.auth_skip_email, "name": settings.auth_skip_name}
     user = request.session.get("user")
     if not user:
         raise HTTPException(status_code=401, detail="login required")
@@ -72,7 +74,13 @@ def dashboard(
     ranked = sorted(latest_by_ticker.values(), key=lambda x: x.total_score, reverse=True)
     return templates.TemplateResponse(
         "index.html",
-        {"request": request, "user": user, "results": ranked, "selected_date": selected_date},
+        {
+            "request": request,
+            "user": user,
+            "results": ranked,
+            "selected_date": selected_date,
+            "auth_skip_enabled": settings.auth_skip_enabled,
+        },
     )
 
 
@@ -105,6 +113,9 @@ def healthz():
 
 @app.get("/login")
 async def login(request: Request):
+    if settings.auth_skip_enabled:
+        request.session["user"] = {"email": settings.auth_skip_email, "name": settings.auth_skip_name}
+        return RedirectResponse(url="/", status_code=302)
     if "google" not in oauth:
         raise HTTPException(status_code=500, detail="google oauth is not configured")
     redirect_uri = settings.google_oauth_redirect_uri

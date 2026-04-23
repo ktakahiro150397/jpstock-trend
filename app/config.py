@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     google_client_secret: str = ""
     google_oauth_redirect_uri: str = "http://localhost:8000/auth/callback"
     allowed_emails: str = ""
+    auth_skip_enabled: bool = False
+    auth_skip_email: str = "dev@example.com"
+    auth_skip_name: str = "Dev User"
 
     weekly_cron_day_of_week: str = "sun"
     weekly_cron_hour: int = 9

@@ -43,6 +43,13 @@ cp .env.example .env
 ```
 
 `ALLOWED_EMAILS` に閲覧許可するGoogleアカウントをカンマ区切りで設定してください。
+Google認証をテスト時にスキップしたい場合は、`.env`で以下を設定します。
+
+```env
+AUTH_SKIP_ENABLED=true
+AUTH_SKIP_EMAIL=dev@example.com
+AUTH_SKIP_NAME=Dev User
+```
 
 ### 2) Dockerで起動
 

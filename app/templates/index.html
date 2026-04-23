@@ -13,6 +13,9 @@
 <body>
   <h1>エントリー候補ダッシュボード</h1>
   <p>ログイン: {{ user.email }} | <a href="/logout">ログアウト</a></p>
+  {% if auth_skip_enabled %}
+  <p style="color: #b36b00;">※ テストモード(認証スキップ)でログイン中</p>
+  {% endif %}
 
   <form action="/jobs/analyze" method="post">
     <label>as_of_date（任意）:
