@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     weekly_cron_day_of_week: str = "sun"
     weekly_cron_hour: int = 9
     weekly_cron_minute: int = 0
+    ingest_cron_hour: int = 6
+    ingest_cron_minute: int = 30
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

@@ -14,6 +14,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.config import get_settings
 from app.db import Base, engine, get_db
 from app.models import AnalysisResult
+from app.services.ingest_service import ingest_market_data
 from app.services.signal_service import run_analysis
 
 settings = get_settings()
@@ -104,6 +105,18 @@ def trigger_analysis(
     parsed_date = parse_iso_date(as_of_date) if as_of_date else None
     results = run_analysis(db, run_type="manual", as_of_date=parsed_date)
     return {"count": len(results), "candidates": [r.ticker for r in results if r.status == "entry_candidate"]}
+
+
+@app.post("/jobs/ingest")
+def trigger_ingest(
+    _: Request,
+    as_of_date: str | None = Form(default=None),
+    db: Session = Depends(get_db),
+    user: dict = Depends(require_login),
+):
+    parsed_date = parse_iso_date(as_of_date) if as_of_date else None
+    result = ingest_market_data(db, as_of_date=parsed_date)
+    return result
 
 
 @app.get("/healthz")

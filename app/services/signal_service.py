@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.analysis import SignalResult, analyze_symbol
 from app.config import get_settings
-from app.data_sources.yahoo import YahooFinanceDataSource
 from app.models import AnalysisResult, NotificationLog, Symbol
+from app.services.ingest_service import load_daily_bars_from_db
 from app.services.notify import build_discord_message, send_discord
 
 
@@ -58,7 +58,6 @@ def ensure_symbols(db: Session) -> None:
 
 def run_analysis(db: Session, run_type: str = "weekly", as_of_date: date | None = None) -> list[SignalResult]:
     settings = get_settings()
-    datasource = YahooFinanceDataSource()
 
     ensure_symbols(db)
 
@@ -69,7 +68,7 @@ def run_analysis(db: Session, run_type: str = "weekly", as_of_date: date | None 
     results: list[SignalResult] = []
 
     for symbol in symbols:
-        df = datasource.fetch_ohlcv(symbol.ticker, settings.analysis_lookback_days, as_of_date=target_date)
+        df = load_daily_bars_from_db(db, symbol.ticker, as_of_date=target_date, lookback_days=settings.analysis_lookback_days)
         result = analyze_symbol(symbol.ticker, df, settings.notify_threshold)
         results.append(result)
 

@@ -23,6 +23,12 @@
     </label>
     <button type="submit">今すぐ分析を実行</button>
   </form>
+  <form action="/jobs/ingest" method="post" style="margin-top: 8px;">
+    <label>as_of_date（任意）:
+      <input type="date" name="as_of_date" value="{{ selected_date if selected_date else '' }}">
+    </label>
+    <button type="submit">Yahooデータを取込</button>
+  </form>
 
   <form action="/" method="get" style="margin-top: 10px;">
     <label>表示日付:

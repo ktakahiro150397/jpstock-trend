@@ -8,6 +8,7 @@
 - Yahoo FinanceからOHLCVを取得（無料）
 - 日足/週足/月足を使ったルールベース分析
 - 分析結果をDBに永続化（PostgreSQL または SQLite）
+- Yahoo OHLC生データをDBに永続化（`price_bars`、冪等Upsert）
 - Google OAuthログイン（許可メールのみ）
 - Web UIで候補銘柄と判定理由を確認
 - 任意の日付(as_of_date)で再計算するバックテスト実行
@@ -59,6 +60,7 @@ docker compose up --build
 
 - Web UI: http://localhost:8000
 - `worker` が毎週日曜 09:00 (JST) に分析を実行
+- `worker` が毎日定時にYahooデータをバックグラウンド取込
 
 ## ローカル開発
 
@@ -75,6 +77,13 @@ uvicorn app.main:app --reload
 python -m app.scheduler
 ```
 
+手動コマンド（テスト時）:
+
+```bash
+python -m app.cli ingest --as-of-date 2025-12-01
+python -m app.cli analyze --as-of-date 2025-12-01
+```
+
 ## API（主要）
 
 - `GET /healthz` : ヘルスチェック
@@ -82,6 +91,8 @@ python -m app.scheduler
 - `GET /auth/callback` : OAuthコールバック
 - `POST /jobs/analyze` : 手動分析実行（ログイン必須）
   - `as_of_date=YYYY-MM-DD` を渡すと指定日時点で再計算（バックテスト用途）
+- `POST /jobs/ingest` : YahooデータをDBへ手動取込（ログイン必須）
+  - `as_of_date=YYYY-MM-DD` を指定可能
 
 ## 監視の最小構成（自宅サーバ向け）
 
