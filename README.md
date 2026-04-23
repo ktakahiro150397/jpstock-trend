@@ -86,6 +86,16 @@ python -m app.cli test-generate --ticker TEST001 --start-date 2025-01-01 --end-d
 python -m app.cli test-delete --ticker TEST001
 ```
 
+自動テスト:
+
+```bash
+pip install pytest
+pytest
+```
+
+- `tests/test_test_data_service.py` で、synthetic生成/削除の安全性（非TEST保護、TEST限定削除）を検証します。
+- GitHub Actions では push / pull_request 時に `pytest` を実行します（`.github/workflows/tests.yml`）。
+
 Yahooレート制限対策（デフォルト値は `.env.example`）:
 - `YAHOO_REQUEST_INTERVAL_SECONDS` : ティッカー間の待機秒数
 - `YAHOO_MAX_RETRIES` : レート制限時の再試行回数
