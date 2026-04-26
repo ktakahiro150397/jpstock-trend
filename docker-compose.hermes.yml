@@ -1,0 +1,62 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: docker/hermes/Dockerfile
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/app.db}
+    ports:
+      - "8000:8000"
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - ./app:/opt/jpstock/app:ro
+      - ./.env:/opt/jpstock/.env:ro
+      - ./.hermes/data:/data
+      - ./.hermes/workspace:/workspace
+    depends_on:
+      - db
+
+  worker:
+    build:
+      context: .
+      dockerfile: docker/hermes/Dockerfile
+    command: python -m app.scheduler
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/app.db}
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    volumes:
+      - ./app:/opt/jpstock/app:ro
+      - ./.env:/opt/jpstock/.env:ro
+      - ./.hermes/data:/data
+      - ./.hermes/workspace:/workspace
+    depends_on:
+      - db
+
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: jpstock
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.hermes/data/postgres:/var/lib/postgresql/data
+
