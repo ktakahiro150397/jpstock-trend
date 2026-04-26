@@ -62,6 +62,21 @@ docker compose up --build
 - `worker` が毎週日曜 09:00 (JST) に分析を実行
 - `worker` が毎日定時にYahooデータをバックグラウンド取込
 
+### 2-b) Hermes Agent向け（権限制限あり）
+
+PoCをHermes Agent上で実行する場合は、専用Composeを利用します。
+
+```bash
+docker compose -f docker-compose.hermes.yml up --build
+```
+
+- `web` / `worker` / `db` を同時起動
+- コンテナルートFSは read-only
+- 書き込みは `./.hermes/data` と `./.hermes/workspace` のみ許可
+- 詳細は `docs/hermes_agent_setup.md` を参照
+- CIでは `hermes-docker-build` workflow でHermes用Dockerイメージのビルドを検証
+
+
 ## ローカル開発
 
 ```bash
